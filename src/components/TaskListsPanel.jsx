@@ -1,24 +1,23 @@
 // src/components/TaskListsPanel.js
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useFirebase } from "../context/Firebase"; // Adjust the import path
 
 const TaskListsPanel = () => {
-  // Simulated data for task lists
-  const taskListsData = [
-    {
-      title: "Task List 1",
-      createdBy: "amit@gmail.com",
-      numTasks: 5,
-      creationTime: "2024-2-01",
-      lastUpdated: "2024-04-02",
-    },
-    {
-      title: "Task List 2",
-      createdBy: "manit@gmail.com",
-      numTasks: 3,
-      creationTime: "2024-01-02",
-      lastUpdated: "2024-01-03",
-    },
-  ];
+  const { listTaskLists } = useFirebase();
+  const [taskLists, setTaskLists] = useState([]);
+
+  useEffect(() => {
+    const fetchTaskLists = async () => {
+      try {
+        const taskListsData = await listTaskLists();
+        setTaskLists(taskListsData);
+      } catch (error) {
+        console.error("Error fetching task lists: ", error);
+      }
+    };
+
+    fetchTaskLists();
+  }, [listTaskLists]);
 
   return (
     <div className="panel">
@@ -34,19 +33,26 @@ const TaskListsPanel = () => {
           </tr>
         </thead>
         <tbody>
-          {taskListsData.map((taskList, index) => (
+          {taskLists.map((taskList, index) => (
             <tr key={index}>
-              <td>{taskList.title}</td>
-              <td>{taskList.createdBy}</td>
-              <td>{taskList.numTasks}</td>
-              <td>{taskList.creationTime}</td>
-              <td>{taskList.lastUpdated}</td>
+              <td>{taskList.listName}</td>
+              <td>{taskList.userEmail}</td>
+              <td>{taskList.tasks.length}</td>
+              <td>{formatDateTime(taskList.createdAt)}</td>
+              <td>{formatDateTime(taskList.tasks[0]?.createdAt)}</td> {/* Example for last updated time of the first task */}
             </tr>
           ))}
         </tbody>
       </table>
     </div>
   );
+};
+
+// Helper function to format timestamp to readable date/time
+const formatDateTime = (timestamp) => {
+  if (!timestamp) return "";
+  const date = new Date(timestamp.seconds * 1000); // Convert Firestore timestamp to JavaScript Date object
+  return date.toLocaleString(); // Adjust formatting as per your preference
 };
 
 export default TaskListsPanel;

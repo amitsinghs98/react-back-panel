@@ -1,3 +1,5 @@
+
+
 // Firebase.js
 
 import { createContext, useContext, useEffect, useState } from "react";
@@ -26,6 +28,7 @@ import { getStorage } from "firebase/storage";
 // Create a context for Firebase
 const FirebaseContext = createContext(null);
 
+
 const firebaseConfig = {
   apiKey: "AIzaSyBoOZlRQdaUPcKFunGBfu4DbfXu-jJF7Z8",
   authDomain: "todo-app-719e2.firebaseapp.com",
@@ -35,6 +38,7 @@ const firebaseConfig = {
   messagingSenderId: "936949043152",
   appId: "1:936949043152:web:7d69357d6a1cdea15af3d5",
 };
+
 // Initialize Firebase app
 const firebaseApp = initializeApp(firebaseConfig);
 
@@ -46,13 +50,9 @@ const storage = getStorage(firebaseApp);
 // Google Authentication Provider
 const googleProvider = new GoogleAuthProvider();
 
-// Function to sign up user with email and password
-// const signupUserWithEmailAndPassword = (email, password) =>
-//   createUserWithEmailAndPassword(firebaseAuth, email, password);
-//fetch ip
+// Function to fetch IP address
 const fetchIPAddress = async () => {
   try {
-    // Replace with actual logic to fetch IP address dynamically (e.g., using a service)
     const response = await fetch("https://api64.ipify.org?format=json");
     const data = await response.json();
     return data.ip;
@@ -61,8 +61,8 @@ const fetchIPAddress = async () => {
     throw error;
   }
 };
-// Function to sign up user with email and password
 
+// Function to sign up user with email and password
 const signupUserWithEmailAndPassword = async (email, password) => {
   try {
     const userCredential = await createUserWithEmailAndPassword(
@@ -72,8 +72,8 @@ const signupUserWithEmailAndPassword = async (email, password) => {
     );
     const user = userCredential.user;
 
-    // Get IP address of user (replace with actual logic to fetch IP dynamically)
-    const ipAddress = await fetchIPAddress(); // Function to fetch IP address dynamically
+    // Get IP address of user
+    const ipAddress = await fetchIPAddress();
 
     // Add user data to Firestore
     const usersRef = collection(firestore, "users");
@@ -83,12 +83,13 @@ const signupUserWithEmailAndPassword = async (email, password) => {
       userIp: ipAddress,
       createdAt: new Date(),
     });
+
     console.log("User created successfully");
 
     return user;
   } catch (error) {
     console.error("Error creating user: ", error);
-    throw error; // Propagate the error back to the caller
+    throw error;
   }
 };
 
@@ -105,14 +106,16 @@ const handleCreateNewTodo = async (listName, user) => {
     const todoRef = collection(firestore, "todos");
     await addDoc(todoRef, {
       listName,
-      userId: user.uid, // Associate todo with user's ID
+      userId: user.uid,
       userEmail: user.email,
-      tasks: [], // Initialize tasks as an empty array
+      tasks: [],
       createdAt: new Date(),
     });
+
     console.log("Todo created successfully");
   } catch (error) {
     console.error("Error creating todo: ", error);
+    throw error;
   }
 };
 
@@ -124,61 +127,55 @@ const handleAddTask = async (
   date,
   priority,
   createdAt,
-  callback // Callback function to update state with updated todos
+  callback
 ) => {
   try {
-    // Ensure required fields are defined
     if (!todoId || !title || !description || !date || !priority) {
       throw new Error("One or more task fields are undefined.");
     }
 
-    // Get the document reference for the todo
     const todoDocRef = doc(firestore, "todos", todoId);
     const todoSnapshot = await getDoc(todoDocRef);
+
     if (!todoSnapshot.exists()) {
-      throw new Error("Todo does not exist."); // Handle if todoId is invalid
+      throw new Error("Todo does not exist.");
     }
 
-    // Get current tasks array or initialize it if it doesn't exist
     const tasks = todoSnapshot.data().tasks || [];
-
-    // Construct the new task object
     const newTask = {
-      title: title,
-      description: description,
-      date: date,
-      priority: priority,
+      title,
+      description,
+      date,
+      priority,
       createdAt: new Date(),
     };
-
-    // Update tasks array with the new task
     const updatedTasks = [...tasks, newTask];
 
-    // Update Firestore document with the updated tasks array
     await updateDoc(todoDocRef, {
       tasks: updatedTasks,
     });
 
     console.log("Task added successfully");
 
-    // If callback function is provided, invoke it with updated todos
     if (typeof callback === "function") {
-      const updatedTodos = await listTodos(); // Fetch updated todos
-      callback(updatedTodos); // Update state with updated todos
+      const updatedTodos = await listTodos();
+      callback(updatedTodos);
     }
   } catch (error) {
     console.error("Error adding task: ", error);
+    throw error;
   }
 };
 
 // Function to list todos for the authenticated user
 const listTodos = async (user) => {
   try {
-    if (!user) return []; // Return empty array if user is not authenticated
+    if (!user) return [];
 
     const todosRef = collection(firestore, "todos");
     const q = query(todosRef, where("userId", "==", user.uid));
     const querySnapshot = await getDocs(q);
+
     return querySnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
@@ -200,6 +197,7 @@ export const FirebaseProvider = (props) => {
     const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
       setUser(user);
     });
+
     return () => unsubscribe();
   }, []);
 
@@ -208,25 +206,42 @@ export const FirebaseProvider = (props) => {
   const signout = async () => {
     try {
       await firebaseAuth.signOut();
-      setUser(null); // Clear user state on logout
+      setUser(null);
     } catch (error) {
       console.error("Error signing out: ", error);
     }
   };
-// Function to list users from Firestore
-const listUsers = async () => {
-  try {
-    const usersRef = collection(firestore, "users");
-    const querySnapshot = await getDocs(usersRef);
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-  } catch (error) {
-    console.error("Error fetching users: ", error);
-    throw error;
-  }
-};
+
+  // Function to list task lists from Firestore
+  const listTaskLists = async () => {
+    try {
+      const taskListsRef = collection(firestore, "todos");
+      const querySnapshot = await getDocs(taskListsRef);
+  
+      return querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+    } catch (error) {
+      console.error("Error fetching task lists: ", error.message);
+      throw error;
+    }
+  };
+  
+  const listUsers = async () => {
+    try {
+      const usersRef = collection(firestore, "users");
+      const querySnapshot = await getDocs(usersRef);
+
+      return querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+    } catch (error) {
+      console.error("Error fetching users: ", error);
+      throw error;
+    }
+  };
 
   return (
     <FirebaseContext.Provider
@@ -236,10 +251,24 @@ const listUsers = async () => {
         signinWithGoogle,
         isLoggedIn,
         handleCreateNewTodo: (listName) => handleCreateNewTodo(listName, user),
-        handleAddTask: (todoId, title, description, date, priority, callback) =>
-          handleAddTask(todoId, title, description, date, priority, callback),
+        handleAddTask: (
+          todoId,
+          title,
+          description,
+          date,
+          priority,
+          callback
+        ) =>
+          handleAddTask(
+            todoId,
+            title,
+            description,
+            date,
+            priority,
+            callback
+          ),
         signout,
-        listUsers, // Include listUsers in the context provider
+        listUsers,listTaskLists,
         listTodos: () => listTodos(user),
       }}
     >

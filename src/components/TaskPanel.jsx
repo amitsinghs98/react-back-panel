@@ -35,26 +35,23 @@ const TasksPanel = () => {
       {loading && <p>Loading...</p>}
       {error && <p>{error}</p>}
       {!loading && !error && (
-        <table>
-          <thead>
-            <tr>
-              <th>Task Title</th>
-              <th>Task Description</th>
-              <th>Task List Title</th>
-              <th>Created By</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tasksData.map((task, index) => (
-              <tr key={index}>
-                <td>{task.title}</td>
-                <td>{task.description}</td>
-                <td>{task.priority}</td>
-                <td>{task.date}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div>
+          {tasksData.map((todo) => (
+            <div key={todo.id}>
+              <h3>{todo.listName}</h3>
+              <ul>
+                {todo.tasks.map((task, index) => (
+                  <li key={index}>
+                    <h4>{task.title}</h4>
+                    <p>Description: {task.description}</p>
+                    <p>Priority: {task.priority}</p>
+                    <p>Date: {task.date}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
