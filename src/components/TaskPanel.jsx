@@ -1,60 +1,79 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useFirebase } from "../context/Firebase";
+const TaskLists = () => {
+  const { listTaskLists } = useFirebase();
+  const [taskLists, setTaskLists] = React.useState([]);
 
-const TasksPanel = () => {
-  const { listTodos } = useFirebase();
-  const [tasksData, setTasksData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchTodos = async () => {
-      setLoading(true);
-      setError(null);
+  React.useEffect(() => {
+    const fetchTaskLists = async () => {
       try {
-        const todos = await listTodos();
-        console.log("Fetched todos:", todos); // Log fetched todos
-        setTasksData(todos);
-        setLoading(false);
+        const lists = await listTaskLists();
+        setTaskLists(lists);
       } catch (error) {
-        console.error("Error fetching todos: ", error);
-        setError("Failed to fetch todos. Please try again later.");
-        setLoading(false);
+        console.error("Error fetching task lists:", error);
       }
     };
 
-    fetchTodos();
-  }, [listTodos]);
-
-  console.log("tasksData:", tasksData); // Log tasksData state
-  console.log("error:", error); // Log error state
+    fetchTaskLists();
+  }, [listTaskLists]);
 
   return (
-    <div className="panel">
-      <h2>Tasks</h2>
-      {loading && <p>Loading...</p>}
-      {error && <p>{error}</p>}
-      {!loading && !error && (
-        <div>
-          {tasksData.map((todo) => (
-            <div key={todo.id}>
-              <h3>{todo.listName}</h3>
-              <ul>
-                {todo.tasks.map((task, index) => (
-                  <li key={index}>
-                    <h4>{task.title}</h4>
-                    <p>Description: {task.description}</p>
-                    <p>Priority: {task.priority}</p>
-                    <p>Date: {task.date}</p>
-                  </li>
-                ))}
-              </ul>
-            </div>
+    <div>
+      <h2>Task Lists</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Task List Title</th>
+            <th>Created By</th>
+            <th>Task Description</th>
+            <th>Task Title</th>
+
+            <th>Creation Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          {taskLists.map((taskList, index) => (
+            <tr key={index}>
+              <td>{taskList.listName}</td>
+              <td>{taskList.userEmail}</td>
+              <td>
+                {taskList.tasks.length > 0 && (
+                  <ul>
+                    {taskList.tasks.map((task, taskIndex) => (
+                      <span key={taskIndex}>
+                        <p> {task.description}</p>
+                        {/* You can add other fields from the task here */}
+                      </span>
+                    ))}
+                  </ul>
+                )}
+              </td>
+              <td>
+                {taskList.tasks.length > 0 && (
+                  <ul>
+                    {taskList.tasks.map((task, taskIndex) => (
+                      <span key={taskIndex}>
+                                                <p> {task.title}</p>
+
+                        {/* You can add other fields from the task here */}
+                      </span>
+                    ))}
+                  </ul>
+                )}
+              </td>
+              <td>{formatDateTime(taskList.createdAt)}</td>
+            </tr>
           ))}
-        </div>
-      )}
+        </tbody>
+      </table>
     </div>
   );
 };
 
-export default TasksPanel;
+
+const formatDateTime = (timestamp) => {
+  if (!timestamp) return "";
+  const date = new Date(timestamp.seconds * 1000); // Convert Firestore timestamp to JavaScript Date object
+  return date.toLocaleString(); // Adjust formatting as per your preference
+};
+export default TaskLists;

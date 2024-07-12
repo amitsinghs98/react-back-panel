@@ -170,21 +170,26 @@ const handleAddTask = async (
 // Function to list todos for the authenticated user
 const listTodos = async (user) => {
   try {
-    if (!user) return [];
+    if (!user) return []; // Return empty array if user is not authenticated
 
     const todosRef = collection(firestore, "todos");
     const q = query(todosRef, where("userId", "==", user.uid));
     const querySnapshot = await getDocs(q);
 
-    return querySnapshot.docs.map((doc) => ({
+    const todos = querySnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
+
+    console.log("Fetched todos:", todos); // Log fetched todos
+
+    return todos;
   } catch (error) {
     console.error("Error fetching todos: ", error);
-    return [];
+    throw error;
   }
 };
+
 
 // Custom hook to use Firebase context
 export const useFirebase = () => useContext(FirebaseContext);
@@ -213,6 +218,7 @@ export const FirebaseProvider = (props) => {
   };
 
   // Function to list task lists from Firestore
+  // Function to list task lists from Firestore
   const listTaskLists = async () => {
     try {
       const taskListsRef = collection(firestore, "todos");
@@ -227,7 +233,6 @@ export const FirebaseProvider = (props) => {
       throw error;
     }
   };
-  
   const listUsers = async () => {
     try {
       const usersRef = collection(firestore, "users");
@@ -239,6 +244,22 @@ export const FirebaseProvider = (props) => {
       }));
     } catch (error) {
       console.error("Error fetching users: ", error);
+      throw error;
+    }
+  };
+
+  
+  const listtodostask = async () => {
+    try {
+      const taskListsRef = collection(firestore, "todos");
+      const querySnapshot = await getDocs(taskListsRef);
+  
+      return querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+    } catch (error) {
+      console.error("Error fetching task lists: ", error.message);
       throw error;
     }
   };
@@ -268,7 +289,7 @@ export const FirebaseProvider = (props) => {
             callback
           ),
         signout,
-        listUsers,listTaskLists,
+        listUsers,listTaskLists,listtodostask,
         listTodos: () => listTodos(user),
       }}
     >
