@@ -1,9 +1,9 @@
-// src/components/Login.js
 import React, { useState } from "react";
 
 const Login = ({ handleLogin }) => {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -11,13 +11,14 @@ const Login = ({ handleLogin }) => {
     if (userId === "admin" && password === "password") {
       handleLogin(true);
     } else {
-      alert("Invalid credentials. Please try again.");
+      setError("Invalid credentials. Please try again.");
     }
   };
 
   return (
     <div className="login-container">
       <h2>Login</h2>
+      {error && <p className="error-message">{error}</p>}
       <form onSubmit={handleSubmit}>
         <label>
           User ID:

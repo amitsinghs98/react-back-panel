@@ -1,22 +1,23 @@
-// src/components/UsersPanel.js
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useFirebase } from "../context/Firebase"; // Adjust the path based on your project structure
 
 const UsersPanel = () => {
-  // Simulated data for users
-  const usersData = [
-    {
-      email: "amit@gmail.com",
-      password: "password1",
-      signupTime: "2024-01-01",
-      ip: "192.168.0.1",
-    },
-    {
-      email: "manit@gmail.com",
-      password: "password2",
-      signupTime: "2024-01-02",
-      ip: "192.168.0.2",
-    },
-  ];
+  const { listUsers } = useFirebase(); // Ensure listUsers is imported correctly
+
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const usersData = await listUsers();
+        setUsers(usersData);
+      } catch (error) {
+        console.error("Error fetching users: ", error);
+      }
+    };
+
+    fetchUsers();
+  }, [listUsers]); // Add listUsers to the dependency array
 
   return (
     <div className="panel">
@@ -25,18 +26,16 @@ const UsersPanel = () => {
         <thead>
           <tr>
             <th>Email ID</th>
-            <th>Password</th>
             <th>Signup Time</th>
             <th>IP</th>
           </tr>
         </thead>
         <tbody>
-          {usersData.map((user, index) => (
+          {users.map((user, index) => (
             <tr key={index}>
-              <td>{user.email}</td>
-              <td>{user.password}</td>
-              <td>{user.signupTime}</td>
-              <td>{user.ip}</td>
+              <td>{user.userEmail}</td>
+              <td>{user.createdAt.toDate().toLocaleString()}</td>
+              <td>{user.userIp}</td>
             </tr>
           ))}
         </tbody>
